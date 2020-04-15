@@ -1,2 +1,4 @@
 # ado-pester
-Pester Test that ensures all required ADO URLs and ports are open
+Azure IP whitelist fetch and ADO URL connectivity tester.
+
+Fast tools to verify Azure can be reached easily
