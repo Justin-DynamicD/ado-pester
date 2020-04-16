@@ -56,6 +56,6 @@ else {
     }
   }
   # dedupe
-  if (!Pretty) {$requestedSubnets = $requestedSubnets | Select-Object -Unique}
+  if (!$Pretty) {$requestedSubnets = $requestedSubnets | Select-Object -Unique}
   Write-Output $requestedSubnets
 }
