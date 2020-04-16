@@ -7,17 +7,19 @@
 .EXAMPLE
   Get-AzureServiceIPs
 
-  This will will fetch every subnet range defined by MS.  Note that this does not filter overlaps for different services, so some entries will be redundant.
+  This will will fetch every subnet range defined by MS.
   
-  Note: MS does have a service simply labeled AzureCloud that appears to be a complete IP range list deduped.  Use the next example to test.
+  Note: MS does have a service simply labeled AzureCloud that appears to be a complete IP range list deduped. Not tested
 .EXAMPLE
-  NGet-AzureServiceIPs -Name "AzureDataLake"
+  Get-AzureServiceIPs -Name "AzureDataLake"
 
-  This will download only IP ranges associated with AzureDataLake. This entry is an array, so mulitple services can be requested if desired
+  This will download only IP ranges associated with AzureDataLake. This entry is an array, so mulitple services can be requested if desired.
+  Resultng IP ranges are deduped.
 .EXAMPLE
-  NGet-AzureServiceIPs -Pretty
+  Get-AzureServiceIPs -Pretty
 
   This will download all IPs but display them an a format with a header and footer, making it easier to read for users, useful for those who requested multiple services.
+  Resulting IP Ranges are _not_ deduped for readability
 .EXAMPLE
   NGet-AzureServiceIPs -FetchRawJson | out-file .\iplist.json
 
@@ -35,9 +37,13 @@ param (
 $requestedSubnets = [System.Collections.ArrayList]@()
 $AzureIPRangesPage = Invoke-WebRequest -Uri $AzureIPRangeURL -Method Get -UseBasicParsing
 [PSCustomObject]$AzureIPRanges = Invoke-RestMethod -Uri ($AzureIPRangesPage.Links | Where-Object {$_.outerhtml -like "*Click here*"}).href[0]
+
+# if we just want the raw data ... end it here
 if ($FetchRawJson) {
   Write-Output $AzureIPRanges.values | ConvertTo-Json
 }
+
+# if we want to filter the ip ranges, continue
 else {
   # pull ip ranges for desired services
   Foreach ($azService in $Azureipranges.values) {
@@ -49,5 +55,7 @@ else {
       if ($Pretty) {$requestedSubnets += ""}
     }
   }
+  # dedupe
+  if (!Pretty) {$requestedSubnets = $requestedSubnets | Select-Object -Unique}
   Write-Output $requestedSubnets
 }
